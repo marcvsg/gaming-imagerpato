@@ -1,0 +1,200 @@
+@font-face {
+  font-family: "Groundhog";
+  src: url("/img/groundhog.ttf") format("truetype");
+  font-style: normal;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Groundhog", Arial, sans-serif;
+}
+
+/* Estilos para o componente App */
+
+.app-root {
+  background-color: #357da6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+}
+
+.logo {
+  width: 100%;
+  height: 80px;
+  background-color: #37bced;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo img {
+  max-width: 100%;
+  height: auto;
+}
+
+.divider-categoria {
+  width: 500px;
+  height: 100px;
+  margin-top: 10px;
+  padding-left: 20px;
+  padding-right: 20px;
+  border-top-right-radius: 15px;
+  border-top-left-radius: 15px;
+  border-bottom: 0px;
+  border-width: 10px;
+  border-style: solid;
+  border-color: rgb(103, 148, 167);
+  background-color: rgb(255, 255, 255);
+}
+
+.hero {
+  margin-top: 0px;
+  padding-left: 20px;
+  padding-right: 20px;
+  border-bottom-right-radius: 15px;
+  border-bottom-left-radius: 15px;
+  border-width: 10px;
+
+  border-top: 0px;
+
+  border-style: solid;
+  border-color: rgb(103, 148, 167);
+  width: 500px;
+  height: 500px;
+  background-color: rgb(255, 255, 255);
+}
+
+.categoria-container {
+  margin-bottom: 20px;
+}
+
+.area-navegacao {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  width: 100%;
+}
+
+.seta {
+  width: 46px;
+  height: 46px;
+  cursor: pointer;
+}
+
+.seta.left {
+  margin-right: 10px;
+}
+
+.seta.right {
+  margin-left: 10px;
+}
+
+.area-pato {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 200px;
+  height: 220px;
+  position: relative;
+}
+
+.area-pato.editando {
+  background: #f0f0f0;
+}
+
+.pato-base {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.acessorio {
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+
+.roupa-selecionada {
+  margin-top: 20px;
+}
+
+.posicao-atual {
+  margin-top: 10px;
+}
+
+.botao-editar {
+  margin-top: 10px;
+}
+
+@media (max-width: 600px) {
+  .app-root {
+    min-height: 100vh;
+    padding: 0;
+  }
+  .logo {
+    height: 60px;
+  }
+  .divider-categoria {
+    width: 98vw;
+    min-width: 0;
+    max-width: 100vw;
+    height: 60px;
+    padding-left: 8px;
+    padding-right: 8px;
+    font-size: 1.1em;
+  }
+  .hero {
+    width: 98vw;
+    min-width: 0;
+    max-width: 100vw;
+    height: auto;
+    padding-left: 8px;
+    padding-right: 8px;
+    font-size: 1em;
+  }
+  .categoria-container {
+    width: 98vw;
+    max-width: 100vw;
+    margin-bottom: 10px;
+    font-size: 1em;
+  }
+  .area-navegacao {
+    flex-direction: column;
+    height: auto;
+    width: 100vw;
+    min-width: 0;
+    max-width: 100vw;
+    gap: 8px;
+  }
+  .seta {
+    width: 36px;
+    height: 36px;
+  }
+  .area-pato {
+    width: 140px;
+    height: 150px;
+  }
+  .pato-base {
+    width: 120px;
+    height: auto;
+  }
+  .roupa-selecionada {
+    font-size: 1em;
+    margin-top: 10px;
+  }
+  .posicao-atual {
+    font-size: 0.95em;
+    margin-top: 8px;
+  }
+  .botao-editar {
+    font-size: 1em;
+    margin-top: 8px;
+    padding: 8px 12px;
+  }
+}
