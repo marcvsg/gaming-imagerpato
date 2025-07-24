@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useRef } from "react";
 import posicoesAcessorios from "./acessorios-posicoes.json";
+import './styles/style.css';
 
 const roupas = [
   "ha-1.png",
@@ -54,27 +55,44 @@ export default function App() {
   const [categoria, setCategoria] = useState("ha");
   const [indiceRoupa, setIndiceRoupa] = useState(0);
   const [posicoes, setPosicoes] = useState({ ...posicoesAcessorios });
+
+  //Cor atual do Seletor
+  const [corAcessorio, setCorAcessorio] = useState("#4c5d58");
+
   const [editando, setEditando] = useState(false);
   const areaRef = useRef(null);
   const [drag, setDrag] = useState({ ativo: false, offsetX: 0, offsetY: 0 });
   // Estado para armazenar o acessório selecionado de cada categoria
   const [selecionados, setSelecionados] = useState({});
 
+  //Array de Cache para Novas Imagens geradas
+  const [imagensColoridas, setImagensColoridas] = useState({});
+
+  // Estado de Seletor de Cores
+  const [canSelectColor, setCanSelectColor] = useState(false);
+
+
   const roupasCategoria = filtrarPorCategoria(categoria);
   const roupaAtual = roupasCategoria[indiceRoupa] || "";
 
   // Atualizar o acessório selecionado ao navegar
   const proximaRoupa = () => {
+
     const novaRoupa =
       roupasCategoria[(indiceRoupa + 1) % roupasCategoria.length];
+
+
+    setCanSelectColor(posicoesAcessorios[novaRoupa]?.colorized || false);
     setIndiceRoupa((prev) => (prev + 1) % roupasCategoria.length);
     setSelecionados((prev) => ({ ...prev, [categoria]: novaRoupa }));
   };
   const roupaAnterior = () => {
     const novaRoupa =
       roupasCategoria[
-        (indiceRoupa - 1 + roupasCategoria.length) % roupasCategoria.length
+      (indiceRoupa - 1 + roupasCategoria.length) % roupasCategoria.length
       ];
+    setCanSelectColor(posicoesAcessorios[novaRoupa]?.colorized || false);
+
     setIndiceRoupa(
       (prev) => (prev - 1 + roupasCategoria.length) % roupasCategoria.length
     );
@@ -119,6 +137,120 @@ export default function App() {
     setDrag((d) => ({ ...d, ativo: false }));
   };
 
+  // Função para colorir imagem usando Canvas
+  const colorirImagem = async (src, cor) => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = img.width;
+        canvas.height = img.height;
+
+        // Desenhar a imagem original
+        ctx.drawImage(img, 0, 0);
+
+        // Obter dados dos pixels
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+
+        // Converter cor HEX para RGB
+        const hex = cor.replace('#', '');
+        const r = parseInt(hex.substr(0, 2), 16);
+        const g = parseInt(hex.substr(2, 2), 16);
+        const b = parseInt(hex.substr(4, 2), 16);
+
+        // Aplicar cor aos pixels não transparentes
+        for (let i = 0; i < data.length; i += 4) {
+          const alpha = data[i + 3]; // Canal alpha
+
+          if (alpha > 0) { // Se o pixel não é transparente
+            
+            const gray = data[i]; // Valor do grayscale (R=G=B em grayscale)
+            const intensity = gray / 255; // Normalizar para 0-1
+
+            const red = data[i];
+            const green = data[i + 1];
+            const blue = data[i + 2];
+            
+            // Verificar se o pixel é cinza (R ≈ G ≈ B com tolerância)
+            const isGray = Math.abs(red - green) <= 5 && 
+                          Math.abs(green - blue) <= 5 && 
+                          Math.abs(red - blue) <= 5;
+            
+            if (!isGray) continue; 
+            // Aplicar a cor mantendo a intensidade do grayscale
+            data[i] = Math.round(r * intensity);     // Red
+            data[i + 1] = Math.round(g * intensity); // Green
+            data[i + 2] = Math.round(b * intensity); // Blue
+            // Alpha permanece o mesmo
+          }
+        }
+
+        // Colocar os pixels coloridos de volta no canvas
+        ctx.putImageData(imageData, 0, 0);
+
+        // Converter para data URL
+        const dataURL = canvas.toDataURL('image/png');
+        resolve(dataURL);
+      };
+
+      img.src = src;
+    });
+  };
+
+  // Função para obter ou criar imagem colorida
+  const obterImagemColorida = async (src, cor) => {
+
+    //Criar chave unico com a Imagem - Cor por demanda
+    const chave = `${src}-${cor}`;
+
+    // Se ja existe uma imagem colorida no cache ele retorna a mesma
+    if (imagensColoridas[chave]) {
+      return imagensColoridas[chave];
+    }
+
+    // Função Assincrona para Colorir a Imagem (Retorna a Imagem Colorida)
+    const imagemColorida = await colorirImagem(src, cor);
+
+
+    //Chamada de função set para atualizar o Objeto de Cache de Imagens Coloridas
+    setImagensColoridas(objetoCache => ({
+      ...objetoCache,
+      [chave]: imagemColorida
+    }));
+
+    return imagemColorida;
+  };
+
+
+  // Componente para imagem colorida
+  const ImagemColorida = ({ src, cor, ...props }) => {
+    const [imagemColorida, setImagemColorida] = useState(null);
+
+    React.useEffect(() => {
+
+      //Se nao pode selecionar cor, retornar a original
+      if (!canSelectColor) {
+        src;
+        return;
+      }
+
+      if (src && cor) {
+        obterImagemColorida(src, cor).then(setImagemColorida);
+      }
+    }, [src, cor]);
+
+    return (
+      <img
+        src={imagemColorida || src}
+        {...props}
+      />
+    );
+  };
+
   const ordemRenderizacao = ["ch", "fa", "ea", "he", "ha", "hr"];
 
   return (
@@ -140,6 +272,24 @@ export default function App() {
             </option>
           ))}
         </select>
+      </div>
+
+      <div style={{ marginBottom: 20 }}>
+        <label htmlFor="cor">Cor do acessório: </label>
+
+        {canSelectColor && (
+          <input
+            type="color"
+            id="cor"
+            value={corAcessorio}
+            onChange={(e) => setCorAcessorio(e.target.value)}
+            style={{ marginLeft: 10, width: 50, height: 30 }}
+          />
+        )}
+
+        <span style={{ marginLeft: 10, fontFamily: 'monospace' }}>
+          {corAcessorio}
+        </span>
       </div>
       <div
         style={{
@@ -175,6 +325,7 @@ export default function App() {
           <img
             src="/img/pt.png"
             alt="Pato base"
+            className="pixelated"
             style={{
               position: "absolute",
               left: "50%",
@@ -193,12 +344,15 @@ export default function App() {
               zIndex = 4; // Acessório de rosto (acima dos óculos)
             else if (cat === "he") zIndex = 5; // Acessório de cabeça
             else if (cat === "ha") zIndex = 2; // Chapéu
-            else if (cat === "hr") zIndex = 2; // Cabelo
+            else if (cat === "hr") zIndex = 1; // Cabelo
+
             return roupa ? (
-              <img
+              <ImagemColorida
                 key={cat}
                 src={`/img/extra/${roupa}`}
+                cor={corAcessorio}
                 alt={`Acessório ${cat}`}
+                className="pixelated"
                 style={{
                   position: "absolute",
                   left:
@@ -234,9 +388,8 @@ export default function App() {
           {posicoes[roupaAtual]?.left ?? 100}px, top:{" "}
           {posicoes[roupaAtual]?.top ?? 100}px
           <br />
-          <code>{`'${roupaAtual}': { left: ${
-            posicoes[roupaAtual]?.left ?? 100
-          }, top: ${posicoes[roupaAtual]?.top ?? 100} },`}</code>
+          <code>{`'${roupaAtual}': { left: ${posicoes[roupaAtual]?.left ?? 100
+            }, top: ${posicoes[roupaAtual]?.top ?? 100} },`}</code>
         </div>
       )}
       <button style={{ marginTop: 10 }} onClick={() => setEditando((v) => !v)}>
