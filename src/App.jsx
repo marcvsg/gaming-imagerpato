@@ -201,7 +201,7 @@ export default function App() {
 
         <div className="area-navegacao">
           <img
-            src={hoverLeft ? "/img/left_hover.png" : "/img/left.png"}
+            src={hoverLeft ? "/img/left_hover.png" : "/img/leftt.png"}
             alt="Seta Esquerda"
             className="seta left"
             onClick={roupaAnterior}
@@ -251,7 +251,7 @@ export default function App() {
             })}
           </div>
           <img
-            src={hoverRight ? "/img/right_hover.png" : "/img/right.png"}
+            src={hoverRight ? "/img/right_hover.png" : "/img/rightt.png"}
             alt="Seta Direita"
             className="seta right"
             onClick={proximaRoupa}
