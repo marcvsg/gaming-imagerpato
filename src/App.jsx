@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import { useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import posicoesAcessorios from "./acessorios-posicoes.json";
 import "./App.css";
 
@@ -55,36 +54,39 @@ export default function App() {
   const [categoria, setCategoria] = useState("ha");
   const [indiceRoupa, setIndiceRoupa] = useState(0);
   const [posicoes, setPosicoes] = useState({ ...posicoesAcessorios });
+  const [corAcessorio, setCorAcessorio] = useState("#4c5d58");
   const [editando, setEditando] = useState(false);
-  const areaRef = useRef(null);
-  const [drag, setDrag] = useState({ ativo: false, offsetX: 0, offsetY: 0 });
-  // Estado para armazenar o acessório selecionado de cada categoria
-  const [selecionados, setSelecionados] = useState({});
   const [hoverLeft, setHoverLeft] = useState(false);
   const [hoverRight, setHoverRight] = useState(false);
+  const [selecionados, setSelecionados] = useState({});
+  const [imagensColoridas, setImagensColoridas] = useState({});
+  const [canSelectColor, setCanSelectColor] = useState(false);
+  const areaRef = useRef(null);
+  const [drag, setDrag] = useState({ ativo: false, offsetX: 0, offsetY: 0 });
 
   const roupasCategoria = filtrarPorCategoria(categoria);
   const roupaAtual = roupasCategoria[indiceRoupa] || "";
 
-  // Atualizar o acessório selecionado ao navegar
   const proximaRoupa = () => {
     const novaRoupa =
       roupasCategoria[(indiceRoupa + 1) % roupasCategoria.length];
+    setCanSelectColor(posicoesAcessorios[novaRoupa]?.colorized || false);
     setIndiceRoupa((prev) => (prev + 1) % roupasCategoria.length);
     setSelecionados((prev) => ({ ...prev, [categoria]: novaRoupa }));
   };
+
   const roupaAnterior = () => {
     const novaRoupa =
       roupasCategoria[
         (indiceRoupa - 1 + roupasCategoria.length) % roupasCategoria.length
       ];
+    setCanSelectColor(posicoesAcessorios[novaRoupa]?.colorized || false);
     setIndiceRoupa(
       (prev) => (prev - 1 + roupasCategoria.length) % roupasCategoria.length
     );
     setSelecionados((prev) => ({ ...prev, [categoria]: novaRoupa }));
   };
 
-  // Ao trocar de categoria, mostrar o acessório já selecionado (se houver)
   const handleCategoria = (e) => {
     const novaCategoria = e.target.value;
     setCategoria(novaCategoria);
@@ -122,72 +124,76 @@ export default function App() {
     setDrag((d) => ({ ...d, ativo: false }));
   };
 
-  const ordemRenderizacao = ["ch", "fa", "ea", "he", "hr", "ha"];
+  const colorirImagem = async (src, cor) => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
 
-  const handleSalvarImagem = async () => {
-    const canvas = document.createElement("canvas");
-    canvas.width = 200;
-    canvas.height = 220;
-    const ctx = canvas.getContext("2d");
+        const hex = cor.replace("#", "");
+        const r = parseInt(hex.substr(0, 2), 16);
+        const g = parseInt(hex.substr(2, 2), 16);
+        const b = parseInt(hex.substr(4, 2), 16);
 
-    const centerX = 100;
-    const centerY = 110;
+        for (let i = 0; i < data.length; i += 4) {
+          const alpha = data[i + 3];
+          if (alpha > 0) {
+            const gray = data[i];
+            const red = data[i];
+            const green = data[i + 1];
+            const blue = data[i + 2];
+            const isGray =
+              Math.abs(red - green) <= 5 &&
+              Math.abs(green - blue) <= 5 &&
+              Math.abs(red - blue) <= 5;
+            if (!isGray) continue;
+            const intensity = gray / 255;
+            data[i] = Math.round(r * intensity);
+            data[i + 1] = Math.round(g * intensity);
+            data[i + 2] = Math.round(b * intensity);
+          }
+        }
 
-    // Função auxiliar para carregar imagem
-    const loadImage = (src) =>
-      new Promise((resolve) => {
-        const img = new window.Image();
-        img.crossOrigin = "anonymous";
-        img.onload = () => resolve(img);
-        img.src = src;
-      });
-
-    // Carregar base e calcular escala
-    const base = await loadImage("/img/pt.png");
-    const scaleX = 200 / base.width;
-    const scaleY = 220 / base.height;
-    // Desenhar base escalada
-    ctx.drawImage(base, 0, 0, 200, 220);
-
-    // Desenhar acessórios na ordem, também escalados
-    for (const cat of ordemRenderizacao) {
-      const roupa = selecionados[cat];
-      if (roupa) {
-        const pos = posicoes[roupa] || { left: 100, top: 100 };
-        const img = await loadImage(`/img/extra/${roupa}`);
-        // Centralizar e escalar igual ao pato base
-        const drawX =
-          centerX + (pos.left - 100) * scaleX - (img.width * scaleX) / 2;
-        const ajusteY = 10; // valor em pixels para subir os acessórios
-        const drawY =
-          centerY +
-          (pos.top - 105) * scaleY -
-          (img.height * scaleY) / 2 -
-          ajusteY;
-        ctx.drawImage(
-          img,
-          drawX,
-          drawY,
-          img.width * scaleX,
-          img.height * scaleY
-        );
-      }
-    }
-
-    // Baixar imagem
-    const link = document.createElement("a");
-    link.download = "pato.png";
-    link.href = canvas.toDataURL();
-    link.click();
+        ctx.putImageData(imageData, 0, 0);
+        resolve(canvas.toDataURL("image/png"));
+      };
+      img.src = src;
+    });
   };
+
+  const obterImagemColorida = async (src, cor) => {
+    const chave = `${src}-${cor}`;
+    if (imagensColoridas[chave]) return imagensColoridas[chave];
+    const imagemColorida = await colorirImagem(src, cor);
+    setImagensColoridas((cache) => ({ ...cache, [chave]: imagemColorida }));
+    return imagemColorida;
+  };
+
+  const ImagemColorida = ({ src, cor, ...props }) => {
+    const [imagemColorida, setImagemColorida] = useState(null);
+    useEffect(() => {
+      if (!canSelectColor) return;
+      if (src && cor) obterImagemColorida(src, cor).then(setImagemColorida);
+    }, [src, cor]);
+    return <img src={imagemColorida || src} {...props} />;
+  };
+
+  const ordemRenderizacao = ["ch", "fa", "ea", "he", "ha", "hr"];
 
   return (
     <div className="app-root">
       <div className="logo">
         <img src="/img/logo.png" />
       </div>
-      <div class="divider-categoria"></div>
-      <div class="hero">
+      <div className="divider-categoria"></div>
+      <div className="hero">
         <div className="categoria-container">
           <label htmlFor="categoria">Categoria: </label>
           <select id="categoria" value={categoria} onChange={handleCategoria}>
@@ -198,7 +204,6 @@ export default function App() {
             ))}
           </select>
         </div>
-
         <div className="area-navegacao">
           <img
             src={hoverLeft ? "/img/left_hover.png" : "/img/leftt.png"}
@@ -214,35 +219,31 @@ export default function App() {
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
+            onMouseDown={handleMouseDown}
           >
             <img src="/img/pt.png" alt="Pato base" className="pato-base" />
-            {/* Renderizar todos os acessórios selecionados na ordem correta */}
             {ordemRenderizacao.map((cat) => {
               const roupa = selecionados[cat];
-              // Definir zIndex por categoria
-              let zIndex = 1;
-              if (cat === "ch") zIndex = 1; // Roupa
-              else if (cat === "ea") zIndex = 3; // Óculos
-              else if (cat === "fa")
-                zIndex = 4; // Acessório de rosto (acima dos óculos)
-              else if (cat === "he") zIndex = 5; // Acessório de cabeça
-              else if (cat === "ha") zIndex = 2; // Chapéu
-              else if (cat === "hr") zIndex = 2; // Cabelo
+              const zIndex =
+                cat === "fa"
+                  ? 4
+                  : cat === "ea"
+                  ? 3
+                  : cat === "he"
+                  ? 5
+                  : cat === "ha"
+                  ? 2
+                  : 1;
               return roupa ? (
-                <img
+                <ImagemColorida
                   key={cat}
                   src={`/img/extra/${roupa}`}
+                  cor={corAcessorio}
                   alt={`Acessório ${cat}`}
                   className="acessorio"
                   style={{
-                    left:
-                      posicoesAcessorios[roupa]?.left !== undefined
-                        ? posicoesAcessorios[roupa].left
-                        : "50%",
-                    top:
-                      posicoesAcessorios[roupa]?.top !== undefined
-                        ? posicoesAcessorios[roupa].top
-                        : "50%",
+                    left: posicoesAcessorios[roupa]?.left ?? "50%",
+                    top: posicoesAcessorios[roupa]?.top ?? "50%",
                     zIndex,
                   }}
                   draggable={false}
@@ -259,6 +260,20 @@ export default function App() {
             onMouseLeave={() => setHoverRight(false)}
           />
         </div>
+        <div className="seletor-cor">
+          {canSelectColor && (
+            <>
+              <label htmlFor="cor">Cor do acessório: </label>
+              <input
+                type="color"
+                id="cor"
+                value={corAcessorio}
+                onChange={(e) => setCorAcessorio(e.target.value)}
+              />
+              <span>{corAcessorio}</span>
+            </>
+          )}
+        </div>
         <p className="roupa-selecionada">
           Roupa selecionada ({categorias[categoria]}):{" "}
           {selecionados[categoria] || "Nenhuma"}
@@ -274,17 +289,10 @@ export default function App() {
             }, top: ${posicoes[roupaAtual]?.top ?? 100} },`}</code>
           </div>
         )}
+        <button className="botao-editar" onClick={() => setEditando((v) => !v)}>
+          {editando ? "Sair do modo edição" : "Editar posição do acessório"}
+        </button>
       </div>
-      <button className="botao-editar" onClick={() => setEditando((v) => !v)}>
-        {editando ? "Sair do modo edição" : "Editar posição do acessório"}
-      </button>
-      <button
-        className="botao-editar"
-        onClick={handleSalvarImagem}
-        style={{ marginLeft: 8 }}
-      >
-        Salvar imagem do pato
-      </button>
     </div>
   );
 }
