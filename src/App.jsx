@@ -60,6 +60,8 @@ export default function App() {
   const [drag, setDrag] = useState({ ativo: false, offsetX: 0, offsetY: 0 });
   // Estado para armazenar o acessório selecionado de cada categoria
   const [selecionados, setSelecionados] = useState({});
+  const [hoverLeft, setHoverLeft] = useState(false);
+  const [hoverRight, setHoverRight] = useState(false);
 
   const roupasCategoria = filtrarPorCategoria(categoria);
   const roupaAtual = roupasCategoria[indiceRoupa] || "";
@@ -120,7 +122,64 @@ export default function App() {
     setDrag((d) => ({ ...d, ativo: false }));
   };
 
-  const ordemRenderizacao = ["ch", "fa", "ea", "he", "ha", "hr"];
+  const ordemRenderizacao = ["ch", "fa", "ea", "he", "hr", "ha"];
+
+  const handleSalvarImagem = async () => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 200;
+    canvas.height = 220;
+    const ctx = canvas.getContext("2d");
+
+    const centerX = 100;
+    const centerY = 110;
+
+    // Função auxiliar para carregar imagem
+    const loadImage = (src) =>
+      new Promise((resolve) => {
+        const img = new window.Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => resolve(img);
+        img.src = src;
+      });
+
+    // Carregar base e calcular escala
+    const base = await loadImage("/img/pt.png");
+    const scaleX = 200 / base.width;
+    const scaleY = 220 / base.height;
+    // Desenhar base escalada
+    ctx.drawImage(base, 0, 0, 200, 220);
+
+    // Desenhar acessórios na ordem, também escalados
+    for (const cat of ordemRenderizacao) {
+      const roupa = selecionados[cat];
+      if (roupa) {
+        const pos = posicoes[roupa] || { left: 100, top: 100 };
+        const img = await loadImage(`/img/extra/${roupa}`);
+        // Centralizar e escalar igual ao pato base
+        const drawX =
+          centerX + (pos.left - 100) * scaleX - (img.width * scaleX) / 2;
+        const ajusteY = 10; // valor em pixels para subir os acessórios
+        const drawY =
+          centerY +
+          (pos.top - 105) * scaleY -
+          (img.height * scaleY) / 2 -
+          ajusteY;
+        ctx.drawImage(
+          img,
+          drawX,
+          drawY,
+          img.width * scaleX,
+          img.height * scaleY
+        );
+      }
+    }
+
+    // Baixar imagem
+    const link = document.createElement("a");
+    link.download = "pato.png";
+    link.href = canvas.toDataURL();
+    link.click();
+  };
 
   return (
     <div className="app-root">
@@ -142,10 +201,12 @@ export default function App() {
 
         <div className="area-navegacao">
           <img
-            src="/img/left.png"
+            src={hoverLeft ? "/img/left_hover.png" : "/img/left.png"}
             alt="Seta Esquerda"
             className="seta left"
             onClick={roupaAnterior}
+            onMouseEnter={() => setHoverLeft(true)}
+            onMouseLeave={() => setHoverLeft(false)}
           />
           <div
             className={`area-pato${editando ? " editando" : ""}`}
@@ -190,10 +251,12 @@ export default function App() {
             })}
           </div>
           <img
-            src="/img/right.png"
+            src={hoverRight ? "/img/right_hover.png" : "/img/right.png"}
             alt="Seta Direita"
             className="seta right"
             onClick={proximaRoupa}
+            onMouseEnter={() => setHoverRight(true)}
+            onMouseLeave={() => setHoverRight(false)}
           />
         </div>
         <p className="roupa-selecionada">
@@ -214,6 +277,13 @@ export default function App() {
       </div>
       <button className="botao-editar" onClick={() => setEditando((v) => !v)}>
         {editando ? "Sair do modo edição" : "Editar posição do acessório"}
+      </button>
+      <button
+        className="botao-editar"
+        onClick={handleSalvarImagem}
+        style={{ marginLeft: 8 }}
+      >
+        Salvar imagem do pato
       </button>
     </div>
   );

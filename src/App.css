@@ -90,6 +90,7 @@ body {
   margin-right: 10px;
 }
 
+
 .seta.right {
   margin-left: 10px;
 }
@@ -113,11 +114,15 @@ body {
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
 
 .acessorio {
   position: absolute;
   transform: translate(-50%, -50%);
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
 
 .roupa-selecionada {
