@@ -38,12 +38,21 @@ const roupas = [
 ];
 
 const categorias = {
-  ha: "Chapéus",
-  hr: "Cabelo",
-  ch: "Roupa",
-  fa: "Acessório de Rosto",
-  ea: "Óculos",
-  he: "Acessório de Cabeça",
+  ha: "",
+  he: "",
+  hr: "",
+  ch: "",
+  fa: "",
+  ea: "",
+};
+
+const iconesCategoria = {
+  ha: "/img/icons/chapeus.png", // Chapéus
+  hr: "/img/icons/hair.gif", // Cabelo
+  ch: "/img/icons/shirt.gif", // Roupa
+  fa: "/img/icons/accrosto.gif", // Acessório de Rosto
+  ea: "/img/icons/glasses.gif", // Óculos
+  he: "/img/icons/acccabeca.gif", // Acessório de Cabeça (ajuste se quiser outro)
 };
 
 function filtrarPorCategoria(prefixo) {
@@ -54,7 +63,8 @@ export default function App() {
   const [categoria, setCategoria] = useState("ha");
   const [indiceRoupa, setIndiceRoupa] = useState(0);
   const [posicoes, setPosicoes] = useState({ ...posicoesAcessorios });
-  const [corAcessorio, setCorAcessorio] = useState("#4c5d58");
+  // Trocar o estado único de cor por um objeto de cores por categoria
+  const [coresAcessorios, setCoresAcessorios] = useState({});
   const [editando, setEditando] = useState(false);
   const [hoverLeft, setHoverLeft] = useState(false);
   const [hoverRight, setHoverRight] = useState(false);
@@ -62,7 +72,39 @@ export default function App() {
   const [imagensColoridas, setImagensColoridas] = useState({});
   const [canSelectColor, setCanSelectColor] = useState(false);
   const areaRef = useRef(null);
+  // Estado para armazenar o tamanho real da área do pato
+  const [areaPatoSize, setAreaPatoSize] = useState({ width: 200, height: 220 });
+
+  // Atualiza o tamanho da área do pato ao montar e ao redimensionar
+  useEffect(() => {
+    function updateAreaSize() {
+      if (areaRef.current) {
+        setAreaPatoSize({
+          width: areaRef.current.offsetWidth,
+          height: areaRef.current.offsetHeight,
+        });
+      }
+    }
+    updateAreaSize();
+    window.addEventListener("resize", updateAreaSize);
+    return () => window.removeEventListener("resize", updateAreaSize);
+  }, []);
+
   const [drag, setDrag] = useState({ ativo: false, offsetX: 0, offsetY: 0 });
+
+  // Adiciona as cores do JSON
+  const hexColors = posicoesAcessorios.hexColors || [];
+  // Paginação da paleta de cores
+  const CORES_POR_PAGINA = 24;
+  const [paginaCor, setPaginaCor] = useState(0);
+  const totalPaginasCor = Math.ceil(hexColors.length / CORES_POR_PAGINA);
+  const coresPagina = hexColors.slice(
+    paginaCor * CORES_POR_PAGINA,
+    (paginaCor + 1) * CORES_POR_PAGINA
+  );
+  const avancarPaginaCor = () => setPaginaCor((p) => (p + 1) % totalPaginasCor);
+  const voltarPaginaCor = () =>
+    setPaginaCor((p) => (p - 1 + totalPaginasCor) % totalPaginasCor);
 
   const roupasCategoria = filtrarPorCategoria(categoria);
   const roupaAtual = roupasCategoria[indiceRoupa] || "";
@@ -187,22 +229,103 @@ export default function App() {
 
   const ordemRenderizacao = ["ch", "fa", "ea", "he", "ha", "hr"];
 
+  // Dimensões padrão da área do pato
+  const areaPatoDesktop = { width: 200, height: 220 };
+  const areaPatoMobile = { width: 90, height: 100 };
+  // Detecta se está em mobile
+  const isMobile = window.innerWidth <= 600;
+  const areaPato = isMobile ? areaPatoMobile : areaPatoDesktop;
+
+  // Função para salvar imagem do pato
+  const salvarImagem = async () => {
+    // Tamanho da área do pato
+    const width = areaPatoSize.width;
+    const height = areaPatoSize.height;
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+
+    // Desenhar base
+    const baseImg = new window.Image();
+    baseImg.src = "/img/pt.png";
+    await new Promise((res) => {
+      baseImg.onload = res;
+    });
+    ctx.drawImage(baseImg, 0, 0, width, height);
+
+    // Desenhar acessórios na ordem correta
+    for (const cat of ordemRenderizacao) {
+      const roupa = selecionados[cat];
+      if (roupa) {
+        const img = new window.Image();
+        img.src = `/img/extra/${roupa}`;
+        await new Promise((res) => {
+          img.onload = res;
+        });
+        // Tamanho exibido dos acessórios (igual ao canvas)
+        const w = width;
+        const h = height;
+        // Calcular posição exata em pixels igual ao CSS
+        const left = ((posicoesAcessorios[roupa]?.left ?? 100) / 200) * width;
+        const top = ((posicoesAcessorios[roupa]?.top ?? 100) / 220) * height;
+        if (posicoesAcessorios[roupa]?.colorized && coresAcessorios[cat]) {
+          // Canvas temporário do tamanho do canvas
+          const tempCanvas = document.createElement("canvas");
+          tempCanvas.width = w;
+          tempCanvas.height = h;
+          const tempCtx = tempCanvas.getContext("2d");
+          tempCtx.drawImage(img, 0, 0, w, h);
+          tempCtx.globalCompositeOperation = "source-atop";
+          tempCtx.fillStyle = coresAcessorios[cat];
+          tempCtx.fillRect(0, 0, w, h);
+          tempCtx.globalCompositeOperation = "source-over";
+          ctx.drawImage(tempCanvas, left - w / 2, top - h / 2, w, h);
+        } else {
+          ctx.drawImage(img, left - w / 2, top - h / 2, w, h);
+        }
+      }
+    }
+
+    // Baixar imagem
+    const link = document.createElement("a");
+    link.download = "pato-personalizado.png";
+    link.href = canvas.toDataURL();
+    link.click();
+  };
+
   return (
     <div className="app-root">
       <div className="logo">
-        <img src="/img/logo.png" />
+        <img src="/img/logo.gif" />
       </div>
-      <div className="divider-categoria"></div>
+      <div className="balao-alerta">
+        <img src="/img/icons/alerta.gif" />
+        <p>Ainda estamos em versão BETA, por favor, não compartilhe ainda.</p>
+        <img src="/img/icons/alerta.gif" />
+      </div>
+
       <div className="hero">
         <div className="categoria-container">
-          <label htmlFor="categoria">Categoria: </label>
-          <select id="categoria" value={categoria} onChange={handleCategoria}>
+          <div className="categorias-lista">
             {Object.entries(categorias).map(([key, label]) => (
-              <option key={key} value={key}>
-                {label}
-              </option>
+              <button
+                key={key}
+                className={`categoria-botao${
+                  categoria === key ? " selecionada" : ""
+                }`}
+                onClick={() => handleCategoria({ target: { value: key } })}
+                type="button"
+              >
+                <img
+                  src={iconesCategoria[key]}
+                  alt={label}
+                  className="icone-categoria"
+                />
+                <span>{label}</span>
+              </button>
             ))}
-          </select>
+          </div>
         </div>
         <div className="area-navegacao">
           <img
@@ -221,6 +344,7 @@ export default function App() {
             onMouseLeave={handleMouseUp}
             onMouseDown={handleMouseDown}
           >
+            <img src="/img/base.png" className="base-do-pato" />
             <img src="/img/pt.png" alt="Pato base" className="pato-base" />
             {ordemRenderizacao.map((cat) => {
               const roupa = selecionados[cat];
@@ -238,12 +362,20 @@ export default function App() {
                 <ImagemColorida
                   key={cat}
                   src={`/img/extra/${roupa}`}
-                  cor={corAcessorio}
+                  cor={coresAcessorios[cat] || "#4c5d58"}
                   alt={`Acessório ${cat}`}
                   className="acessorio"
                   style={{
-                    left: posicoesAcessorios[roupa]?.left ?? "50%",
-                    top: posicoesAcessorios[roupa]?.top ?? "50%",
+                    left:
+                      ((posicoesAcessorios[roupa]?.left ?? 100) /
+                        areaPatoSize.width) *
+                        100 +
+                      "%",
+                    top:
+                      ((posicoesAcessorios[roupa]?.top ?? 100) /
+                        areaPatoSize.height) *
+                        100 +
+                      "%",
                     zIndex,
                   }}
                   draggable={false}
@@ -260,24 +392,58 @@ export default function App() {
             onMouseLeave={() => setHoverRight(false)}
           />
         </div>
+
         <div className="seletor-cor">
           {canSelectColor && (
             <>
-              <label htmlFor="cor">Cor do acessório: </label>
-              <input
-                type="color"
-                id="cor"
-                value={corAcessorio}
-                onChange={(e) => setCorAcessorio(e.target.value)}
-              />
-              <span>{corAcessorio}</span>
+              <div className="paleta-cores-paginada">
+                <img
+                  src={"/img/leftt.png"}
+                  alt="Anterior"
+                  className="seta-paleta"
+                  onClick={voltarPaginaCor}
+                  style={{
+                    visibility: totalPaginasCor > 1 ? "visible" : "hidden",
+                  }}
+                />
+                <div className="paleta-cores">
+                  {coresPagina.map((hex, idx) => (
+                    <button
+                      key={hex + idx + paginaCor}
+                      className={`cor-quadrado${
+                        coresAcessorios[categoria]?.toLowerCase() ===
+                        hex.toLowerCase()
+                          ? " selecionada"
+                          : ""
+                      }`}
+                      style={{ background: hex }}
+                      onClick={() =>
+                        setCoresAcessorios((prev) => ({
+                          ...prev,
+                          [categoria]: hex,
+                        }))
+                      }
+                      aria-label={hex}
+                      type="button"
+                    />
+                  ))}
+                </div>
+                <img
+                  src={"/img/rightt.png"}
+                  alt="Próxima"
+                  className="seta-paleta"
+                  onClick={avancarPaginaCor}
+                  style={{
+                    visibility: totalPaginasCor > 1 ? "visible" : "hidden",
+                  }}
+                />
+              </div>
             </>
           )}
         </div>
-        <p className="roupa-selecionada">
-          Roupa selecionada ({categorias[categoria]}):{" "}
-          {selecionados[categoria] || "Nenhuma"}
-        </p>
+        <button className="botao-salvar" onClick={salvarImagem}>
+          <img src="/img/botao-salvar.png" alt="Salvar" />
+        </button>
         {editando && roupaAtual && (
           <div className="posicao-atual">
             <strong>Posição atual:</strong> left:{" "}
@@ -289,9 +455,6 @@ export default function App() {
             }, top: ${posicoes[roupaAtual]?.top ?? 100} },`}</code>
           </div>
         )}
-        <button className="botao-editar" onClick={() => setEditando((v) => !v)}>
-          {editando ? "Sair do modo edição" : "Editar posição do acessório"}
-        </button>
       </div>
     </div>
   );
