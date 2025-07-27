@@ -47,8 +47,22 @@ const coresPele = [
   "pt-5.png",
 ];
 
+const fundos = [
+  "sem-fundo.png",
+  "Layer 0.png",
+  "Layer 1.png",
+  "Layer 2.png",
+  "Layer 3.png",
+  "Layer 4.png",
+  "Layer 5.png",
+  "Layer 6.png",
+  "Layer 7.png",
+  "Layer 8.png",
+  "Layer 9.png",
+];
+
 const categorias = {
-  skin: "Cor de Pele",
+  skin: "",
   ha: "",
   he: "",
   hr: "",
@@ -64,7 +78,7 @@ const iconesCategoria = {
   fa: "/img/icons/accrosto.gif", // Acessório de Rosto
   ea: "/img/icons/glasses.gif", // Óculos
   he: "/img/icons/acccabeca.gif", // Acessório de Cabeça (ajuste se quiser outro)
-  skin: "/img/icons/accrosto.gif", // Cor de Pele (usando ícone temporário)
+  skin: "/img/icons/pele.png", // Cor de Pele (usando ícone temporário)
 };
 
 function filtrarPorCategoria(prefixo) {
@@ -89,6 +103,8 @@ export default function App() {
   const [selecionados, setSelecionados] = useState({});
   const [imagensColoridas, setImagensColoridas] = useState({});
   const [canSelectColor, setCanSelectColor] = useState(false);
+  const [fundoSelecionado, setFundoSelecionado] = useState("sem-fundo.png");
+  const [paginaFundo, setPaginaFundo] = useState(0);
 
   // Inicializar pt-0.png como cor de pele padrão e cores padrão para categorias
   useEffect(() => {
@@ -140,7 +156,7 @@ export default function App() {
   // Adiciona as cores do JSON
   const hexColors = posicoesAcessorios.hexColors || [];
   // Paginação da paleta de cores
-  const CORES_POR_PAGINA = 24;
+  const CORES_POR_PAGINA = 21;
   const [paginaCor, setPaginaCor] = useState(0);
   const totalPaginasCor = Math.ceil(hexColors.length / CORES_POR_PAGINA);
   const coresPagina = hexColors.slice(
@@ -150,6 +166,18 @@ export default function App() {
   const avancarPaginaCor = () => setPaginaCor((p) => (p + 1) % totalPaginasCor);
   const voltarPaginaCor = () =>
     setPaginaCor((p) => (p - 1 + totalPaginasCor) % totalPaginasCor);
+
+  // Paginação dos fundos
+  const FUNDOS_POR_PAGINA = 3;
+  const totalPaginasFundo = Math.ceil(fundos.length / FUNDOS_POR_PAGINA);
+  const fundosPagina = fundos.slice(
+    paginaFundo * FUNDOS_POR_PAGINA,
+    (paginaFundo + 1) * FUNDOS_POR_PAGINA
+  );
+  const avancarPaginaFundo = () =>
+    setPaginaFundo((p) => (p + 1) % totalPaginasFundo);
+  const voltarPaginaFundo = () =>
+    setPaginaFundo((p) => (p - 1 + totalPaginasFundo) % totalPaginasFundo);
 
   const roupasCategoria = filtrarPorCategoria(categoria);
   const roupaAtual = roupasCategoria[indiceRoupa] || "";
@@ -314,6 +342,17 @@ export default function App() {
     canvas.height = height;
     const ctx = canvas.getContext("2d");
 
+    // Desenhar fundo se não for "sem-fundo.png"
+    if (fundoSelecionado !== "sem-fundo.png") {
+      const fundoImg = new window.Image();
+      fundoImg.src = `/img/fundos/${fundoSelecionado}`;
+      await new Promise((res) => {
+        fundoImg.onload = res;
+      });
+      // Desenhar o fundo cobrindo toda a área
+      ctx.drawImage(fundoImg, 0, 0, width, height);
+    }
+
     // Desenhar base
     const baseImg = new window.Image();
     const baseSrc =
@@ -385,177 +424,238 @@ export default function App() {
         <img src="/img/icons/alerta.gif" />
       </div>
 
-      <div className="pixel-corners--wrapper">
-        <div className="pixel-corners hero">
-          <div className="categoria-container">
-            <div className="categorias-lista">
-              {Object.entries(categorias).map(([key, label]) => (
-                <button
-                  key={key}
-                  className={`categoria-botao${
-                    categoria === key ? " selecionada" : ""
-                  }`}
-                  onClick={() => handleCategoria({ target: { value: key } })}
-                  type="button"
-                >
-                  <img
-                    src={iconesCategoria[key]}
-                    alt={label}
-                    className="icone-categoria"
-                  />
-                  <span>{label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="area-navegacao">
-            <img
-              src={hoverLeft ? "/img/left_hover.png" : "/img/leftt.png"}
-              alt="Seta Esquerda"
-              className="seta left"
-              onClick={roupaAnterior}
-              onMouseEnter={() => setHoverLeft(true)}
-              onMouseLeave={() => setHoverLeft(false)}
-            />
-            <div
-              className={`area-pato${editando ? " editando" : ""}`}
-              ref={areaRef}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
-              onMouseDown={handleMouseDown}
-            >
-              <img src="/img/base.png" className="base-do-pato" />
-              <img
-                src={
-                  selecionados.skin && selecionados.skin !== ""
-                    ? `/img/${selecionados.skin}`
-                    : "/img/pt.png"
-                }
-                alt=""
-                className="pato-base"
-              />
-              {ordemRenderizacao.map((cat) => {
-                const roupa = selecionados[cat];
-                const zIndex =
-                  cat === "fa"
-                    ? 4
-                    : cat === "ea"
-                    ? 3
-                    : cat === "he"
-                    ? 5
-                    : cat === "ha"
-                    ? 2
-                    : 1;
-                // Seleciona as coordenadas corretas
-                const posicao = isMobile
-                  ? posicoesAcessoriosMobile[roupa] || posicoesAcessorios[roupa]
-                  : posicoesAcessorios[roupa];
-                return roupa ? (
-                  <ImagemColorida
-                    key={cat}
-                    src={`/img/extra/${roupa}`}
-                    cor={
-                      posicao?.colorized
-                        ? coresAcessorios[cat] || "#4c5d58"
-                        : null
-                    }
-                    alt={`Acessório ${cat}`}
-                    className="acessorio"
-                    style={{
-                      left:
-                        ((posicao?.left ?? 100) / areaPatoSize.width) * 100 +
-                        "%",
-                      top:
-                        ((posicao?.top ?? 100) / areaPatoSize.height) * 100 +
-                        "%",
-                      zIndex,
-                    }}
-                    draggable={false}
-                  />
-                ) : null;
-              })}
-            </div>
-            <img
-              src={hoverRight ? "/img/right_hover.png" : "/img/rightt.png"}
-              alt="Seta Direita"
-              className="seta right"
-              onClick={proximaRoupa}
-              onMouseEnter={() => setHoverRight(true)}
-              onMouseLeave={() => setHoverRight(false)}
-            />
+      <div>
+        <div className="hero-flex-layout">
+          <div className="categoria-container"></div>
+
+          <div className="categorias-lista">
+            {Object.entries(categorias).map(([key, label]) => (
+              <button
+                key={key}
+                className={`categoria-botao${
+                  categoria === key ? " selecionada" : ""
+                }`}
+                onClick={() => handleCategoria({ target: { value: key } })}
+                type="button"
+              >
+                <img
+                  src={iconesCategoria[key]}
+                  alt={label}
+                  className="icone-categoria"
+                />
+                <span>{label}</span>
+              </button>
+            ))}
           </div>
 
-          <div className="seletor-cor">
-            <div className="paleta-cores-paginada">
-              <img
-                src={"/img/leftt.png"}
-                alt="Anterior"
-                className="seta-paleta"
-                onClick={canSelectColor ? voltarPaginaCor : undefined}
-                style={{
-                  visibility: totalPaginasCor > 1 ? "visible" : "hidden",
-                  cursor: canSelectColor ? "pointer" : "default",
-                  opacity: canSelectColor ? 1 : 0.5,
-                }}
-              />
-              <div
-                className={`paleta-cores ${
-                  !canSelectColor ? "desabilitada" : ""
-                }`}
-              >
-                {coresPagina.map((hex, idx) => (
-                  <button
-                    key={hex + idx + paginaCor}
-                    className={`cor-quadrado${
-                      coresAcessorios[categoria]?.toLowerCase() ===
-                      hex.toLowerCase()
-                        ? " selecionada"
-                        : ""
-                    }${!canSelectColor ? " nao-colorizavel" : ""}`}
-                    style={{ background: hex }}
-                    onClick={
-                      canSelectColor
-                        ? () =>
-                            setCoresAcessorios((prev) => ({
-                              ...prev,
-                              [categoria]: hex,
-                            }))
-                        : undefined
+          <div className="hero">
+            <div className="area-navegacao">
+              <div className="editor-pato">
+                <img
+                  src={hoverLeft ? "/img/left_hover.png" : "/img/leftt.png"}
+                  alt="Seta Esquerda"
+                  className="seta left"
+                  onClick={roupaAnterior}
+                  onMouseEnter={() => setHoverLeft(true)}
+                  onMouseLeave={() => setHoverLeft(false)}
+                />
+                <div
+                  className={`area-pato${editando ? " editando" : ""}`}
+                  ref={areaRef}
+                  onMouseMove={handleMouseMove}
+                  onMouseUp={handleMouseUp}
+                  onMouseLeave={handleMouseUp}
+                  onMouseDown={handleMouseDown}
+                >
+                  {fundoSelecionado !== "sem-fundo.png" && (
+                    <img
+                      src={`/img/fundos/${fundoSelecionado}`}
+                      className="fundo-pato"
+                    />
+                  )}
+                  <img src="/img/base.png" className="base-do-pato" />
+                  <img
+                    src={
+                      selecionados.skin && selecionados.skin !== ""
+                        ? `/img/${selecionados.skin}`
+                        : "/img/pt.png"
                     }
-                    aria-label={hex}
-                    type="button"
-                    disabled={!canSelectColor}
+                    alt=""
+                    className="pato-base"
                   />
-                ))}
+                  {ordemRenderizacao.map((cat) => {
+                    const roupa = selecionados[cat];
+                    const zIndex =
+                      cat === "fa"
+                        ? 4
+                        : cat === "ea"
+                        ? 3
+                        : cat === "he"
+                        ? 5
+                        : cat === "ha"
+                        ? 2
+                        : 1;
+                    // Seleciona as coordenadas corretas
+                    const posicao = isMobile
+                      ? posicoesAcessoriosMobile[roupa] ||
+                        posicoesAcessorios[roupa]
+                      : posicoesAcessorios[roupa];
+                    return roupa ? (
+                      <ImagemColorida
+                        key={cat}
+                        src={`/img/extra/${roupa}`}
+                        cor={
+                          posicao?.colorized
+                            ? coresAcessorios[cat] || "#4c5d58"
+                            : null
+                        }
+                        alt={`Acessório ${cat}`}
+                        className="acessorio"
+                        style={{
+                          left:
+                            ((posicao?.left ?? 100) / areaPatoSize.width) *
+                              100 +
+                            "%",
+                          top:
+                            ((posicao?.top ?? 100) / areaPatoSize.height) *
+                              100 +
+                            "%",
+                          zIndex,
+                        }}
+                        draggable={false}
+                      />
+                    ) : null;
+                  })}
+                </div>
+                <img
+                  src={hoverRight ? "/img/right_hover.png" : "/img/rightt.png"}
+                  alt="Seta Direita"
+                  className="seta right"
+                  onClick={proximaRoupa}
+                  onMouseEnter={() => setHoverRight(true)}
+                  onMouseLeave={() => setHoverRight(false)}
+                />
               </div>
-              <img
-                src={"/img/rightt.png"}
-                alt="Próxima"
-                className="seta-paleta"
-                onClick={canSelectColor ? avancarPaginaCor : undefined}
-                style={{
-                  visibility: totalPaginasCor > 1 ? "visible" : "hidden",
-                  cursor: canSelectColor ? "pointer" : "default",
-                  opacity: canSelectColor ? 1 : 0.5,
-                }}
-              />
+
+              <div className="paletas-container">
+                <div className="seletor-cor">
+                  <div className="paleta-cores-paginada">
+                    <img
+                      src={"/img/leftt.png"}
+                      alt="Anterior"
+                      className="seta-paleta"
+                      onClick={canSelectColor ? voltarPaginaCor : undefined}
+                      style={{
+                        visibility: totalPaginasCor > 1 ? "visible" : "hidden",
+                        cursor: canSelectColor ? "pointer" : "default",
+                        opacity: canSelectColor ? 1 : 0.5,
+                      }}
+                    />
+                    <div
+                      className={`paleta-cores ${
+                        !canSelectColor ? "desabilitada" : ""
+                      }`}
+                    >
+                      {coresPagina.map((hex, idx) => (
+                        <button
+                          key={hex + idx + paginaCor}
+                          className={`cor-quadrado${
+                            coresAcessorios[categoria]?.toLowerCase() ===
+                            hex.toLowerCase()
+                              ? " selecionada"
+                              : ""
+                          }${!canSelectColor ? " nao-colorizavel" : ""}`}
+                          style={{ background: hex }}
+                          onClick={
+                            canSelectColor
+                              ? () =>
+                                  setCoresAcessorios((prev) => ({
+                                    ...prev,
+                                    [categoria]: hex,
+                                  }))
+                              : undefined
+                          }
+                          aria-label={hex}
+                          type="button"
+                          disabled={!canSelectColor}
+                        />
+                      ))}
+                    </div>
+                    <img
+                      src={"/img/rightt.png"}
+                      alt="Próxima"
+                      className="seta-paleta"
+                      onClick={canSelectColor ? avancarPaginaCor : undefined}
+                      style={{
+                        visibility: totalPaginasCor > 1 ? "visible" : "hidden",
+                        cursor: canSelectColor ? "pointer" : "default",
+                        opacity: canSelectColor ? 1 : 0.5,
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div className="seletor-fundos">
+                  <h4>Fundos</h4>
+                  <div className="paleta-fundos-paginada">
+                    <img
+                      src={"/img/leftt.png"}
+                      alt="Anterior"
+                      className="seta-paleta"
+                      onClick={voltarPaginaFundo}
+                      style={{
+                        visibility:
+                          totalPaginasFundo > 1 ? "visible" : "hidden",
+                        cursor: "pointer",
+                        opacity: 1,
+                      }}
+                    />
+                    <div className="paleta-fundos">
+                      {fundosPagina.map((fundo, idx) => (
+                        <button
+                          key={fundo + idx + paginaFundo}
+                          className={`fundo-quadrado${
+                            fundoSelecionado === fundo ? " selecionada" : ""
+                          }`}
+                          onClick={() => setFundoSelecionado(fundo)}
+                          aria-label={fundo}
+                          type="button"
+                        >
+                          <img src={`/img/fundos/${fundo}`} alt={fundo} />
+                        </button>
+                      ))}
+                    </div>
+                    <img
+                      src={"/img/rightt.png"}
+                      alt="Próxima"
+                      className="seta-paleta"
+                      onClick={avancarPaginaFundo}
+                      style={{
+                        visibility:
+                          totalPaginasFundo > 1 ? "visible" : "hidden",
+                        cursor: "pointer",
+                        opacity: 1,
+                      }}
+                    />
+                  </div>
+                </div>
+                <button className="botao-salvar" onClick={salvarImagem}>
+                  Salvar
+                </button>
+                {editando && roupaAtual && (
+                  <div className="posicao-atual">
+                    <strong>Posição atual:</strong> left:{" "}
+                    {posicoes[roupaAtual]?.left ?? 100}px, top:{" "}
+                    {posicoes[roupaAtual]?.top ?? 100}px
+                    <br />
+                    <code>{`'${roupaAtual}': { left: ${
+                      posicoes[roupaAtual]?.left ?? 100
+                    }, top: ${posicoes[roupaAtual]?.top ?? 100} },`}</code>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-          <button className="botao-salvar" onClick={salvarImagem}>
-            Salvar
-          </button>
-          {editando && roupaAtual && (
-            <div className="posicao-atual">
-              <strong>Posição atual:</strong> left:{" "}
-              {posicoes[roupaAtual]?.left ?? 100}px, top:{" "}
-              {posicoes[roupaAtual]?.top ?? 100}px
-              <br />
-              <code>{`'${roupaAtual}': { left: ${
-                posicoes[roupaAtual]?.left ?? 100
-              }, top: ${posicoes[roupaAtual]?.top ?? 100} },`}</code>
-            </div>
-          )}
         </div>
       </div>
     </div>

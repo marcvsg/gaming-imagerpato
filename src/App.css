@@ -38,6 +38,8 @@ body {
   align-items: center;
   margin: 0;
   box-sizing: border-box;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
 
 .logo {
@@ -62,7 +64,7 @@ body {
 }
 
 .balao-alerta {
-  width: 40%;
+  width: auto;
   height: 25px;
   background-color: #d8d8d8;
   display: flex;
@@ -77,33 +79,101 @@ body {
   margin-top: 10px;
 }
 
+.hero-flex-layout {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  width: 100%;
+  justify-content: flex-start;
+  padding-left: 10px;
+  max-width: 726px;
+  margin: 0 auto;
+}
+
 .hero {
   margin-top: 10px;
-  padding-left: 20px;
-  padding-right: 20px;
+  padding-top: 10px;
   border-radius: 10px;
   border-width: 2px;
-
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
   border-style: solid;
   border-color: rgb(0, 0, 0);
-  width: 600px;
-  height: 600px;
+  width: 500px;
+  height: 570px;
   background-color: rgb(255, 255, 255);
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 30px;
+}
+
+.categorias-lista {
+  width: 80px;
+  height: 450px;
+  background-color: rgb(255, 255, 255);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  margin-top: 10px;
+  border-radius: 10px;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-width: 2px;
+  border-style: solid;
+  border-color: rgb(0, 0, 0);
+  border-right: none;
+  justify-content: center;
 }
 
 .categoria-container {
-  margin-bottom: 20px;
+  margin-bottom: 0;
+  margin-top: 0;
+  min-width: 80px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .area-navegacao {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   height: auto;
-  width: 100%;
-  gap: 0;
+  width: 50%;
+  gap: 10px;
   margin: 0;
   padding: 0;
+}
+
+.editor-pato {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.paletas-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.seletor-cor {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .seta {
@@ -190,56 +260,38 @@ body {
   cursor: pointer;
 }
 
-.botao-salvar img {
-  width: 120px;
-  height: auto;
-  display: block;
-  pointer-events: none;
-  user-select: none;
-  transition: filter 0.2s;
-}
-.botao-salvar:hover img {
-  content: url("/img/botao-salvar-hover.png");
-  filter: brightness(1.1);
-}
-
-.categorias-lista {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  margin-top: 8px;
-  margin-bottom: 8px;
-}
-
 .categoria-botao {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: #cacaca url("/img/bg-icons.png") center center / 100% 100%
-    no-repeat;
+  background-image: url("/img/bg-icons.png");
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-position: center;
   border-radius: 10px;
-  width: 80px;
-  height: 80px;
-  min-width: 80px;
-  min-height: 80px;
-  max-width: 80px;
-  max-height: 80px;
+  width: 60px;
+  height: 60px;
   padding: 0;
   cursor: pointer;
-  font-family: inherit;
-  font-size: 0.95em;
-  outline: none;
-  box-sizing: border-box;
+  border: none;
+  transition: transform 0.1s ease;
+}
+
+.categoria-botao.selecionada {
+  background-image: url("/img/bg-icons-hover.png");
 }
 
 .icone-categoria {
-  width: 40px;
-  height: 30px;
+  width: 25px;
+  height: 25px;
   margin-bottom: 4px;
   image-rendering: pixelated;
+}
+
+.icone-categoria[src="/img/icons/glasses.gif"] {
+  width: 35px;
+  height: 35px;
 }
 
 .categoria-botao span {
@@ -254,7 +306,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  margin: 8px 0;
+  margin: 5px 0;
 }
 .seta-paleta {
   width: 28px;
@@ -335,6 +387,91 @@ body {
   z-index: 5;
 }
 
+.fundo-pato {
+  position: flex;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  border-style: solid;
+  border-width: 2px;
+  border-color: #000000;
+}
+
+.seletor-fundos {
+  margin-bottom: 15px;
+}
+
+.seletor-fundos h4 {
+  text-align: center;
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  color: #333;
+}
+
+.paleta-fundos-paginada {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.paleta-fundos {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  max-width: 200px;
+}
+
+.fundo-quadrado {
+  width: 50px;
+  height: 50px;
+  border: 2px solid #ccc;
+  border-radius: 5px;
+  background: white;
+  cursor: pointer;
+  padding: 2px;
+  transition: border-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fundo-quadrado:hover {
+  border-color: #666;
+}
+
+.fundo-quadrado.selecionada {
+  border-color: #ff6b35;
+  border-width: 3px;
+}
+
+.fundo-quadrado img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 3px;
+}
+
+.fundo-quadrado[aria-label="sem-fundo.png"] {
+  background: #f0f0f0;
+  border: 2px dashed #999;
+}
+
+.fundo-quadrado[aria-label="sem-fundo.png"]:hover {
+  border-color: #000000;
+  background: #e0e0e0;
+}
+
+.fundo-quadrado[aria-label="sem-fundo.png"].selecionada {
+  border-color: #ff6b35;
+  border-width: 3px;
+  background: #ffe6d6;
+}
+
 @media (max-width: 600px) {
   html,
   body {
@@ -408,20 +545,19 @@ body {
     width: 120px;
     height: auto;
   }
-  .area-pato .acessorio {
-    width: 120px !important;
-    height: auto !important;
-  }
-  /* Ajuste específico para roupas (hr-*) - deixar maiores */
-  .area-pato .acessorio[src*="hr-"] {
+  /* Remover redimensionamento mobile de acessórios */
+  /* .area-pato .acessorio {
+    width: 200px !important;
+    height: 200px !important;
+  } */
+  /* .area-pato .acessorio[src*="hr-"] {
     width: 140px !important;
     height: auto !important;
-  }
-  /* Ajuste específico para hr-3.png que parece maior */
-  .area-pato .acessorio[src*="hr-3.png"] {
+  } */
+  /* .area-pato .acessorio[src*="hr-3.png"] {
     width: 120px !important;
     height: auto !important;
-  }
+  } */
   .roupa-selecionada {
     font-size: 1em;
     margin-top: 10px;
@@ -430,13 +566,10 @@ body {
     font-size: 0.95em;
     margin-top: 8px;
   }
-  .botao-editar {
-    font-size: 1em;
-    margin-top: 8px;
-    padding: 8px 12px;
-  }
+
   .botao-salvar {
     font-size: 1em;
+    font-family: "Volter", Arial, sans-serif;
     padding: 8px 12px;
     border-radius: 6px;
     width: 150px;
@@ -475,6 +608,10 @@ body {
 }
 
 @media (max-width: 900px) {
+  .hero-flex-layout {
+    flex-direction: column;
+    align-items: center;
+  }
   .hero {
     width: 98vw;
     min-width: 0;
@@ -509,7 +646,7 @@ body {
     height: 36px;
   }
   .categorias-lista {
-    flex-wrap: wrap;
+    flex-direction: row;
     gap: 8px;
   }
   .categoria-botao {
