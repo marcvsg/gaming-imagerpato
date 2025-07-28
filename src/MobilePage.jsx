@@ -11,37 +11,22 @@ export default function MobilePage() {
 
         <div className="mobile-content">
           <div className="mobile-icon">
-            <img src="/img/icons/alerta.gif" alt="Alerta" />
+            <img src="/img/aviso-mobile.png" alt="Alerta" />
           </div>
 
           <h1 className="mobile-title">Versão Desktop Apenas</h1>
 
           <p className="mobile-message">
-            Este site foi desenvolvido para funcionar melhor em computadores
-            desktop. Para uma experiência completa, acesse através de um
-            navegador em seu computador.
+            Este site foi desenvolvido para funcionar melhor em computadores.
+            Para uma experiência completa, acesse através de um navegador em seu
+            computador.
           </p>
-
-          <div className="mobile-features">
-            <div className="feature-item">
-              <div className="feature-icon">🖥️</div>
-              <span>Melhor experiência em desktop</span>
-            </div>
-            <div className="feature-item">
-              <div className="feature-icon">🎨</div>
-              <span>Editor completo de personalização</span>
-            </div>
-            <div className="feature-item">
-              <div className="feature-icon">💾</div>
-              <span>Salvamento de imagens</span>
-            </div>
-          </div>
 
           <div className="mobile-actions">
             <button
               className="mobile-button primary"
               onClick={() =>
-                window.open("https://pato-personalizado.vercel.app", "_blank")
+                window.open("https://pato-imager.vercel.app/", "_blank")
               }
             >
               Acessar no Desktop
@@ -49,7 +34,7 @@ export default function MobilePage() {
 
             <button
               className="mobile-button secondary"
-              onClick={() => window.history.back()}
+              onClick={() => window.open("https://google.com/", "_blank")}
             >
               Voltar
             </button>
@@ -57,7 +42,7 @@ export default function MobilePage() {
         </div>
 
         <div className="mobile-footer">
-          <p>© 2024 Pato Personalizado</p>
+          <p>© 2025 - Quackrator</p>
         </div>
       </div>
     </div>
