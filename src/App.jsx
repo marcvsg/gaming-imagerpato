@@ -142,20 +142,15 @@ export default function App() {
   }, []);
 
   // Estado para detectar se está em mobile
-  const [isMobile, setIsMobile] = useState(true); // Forçar mobile para teste
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Debug: log para verificar se está detectando mobile
-  console.log("Largura da tela:", window.innerWidth);
-  console.log("É mobile?", isMobile);
-
   // Se estiver em mobile, mostrar a página mobile
   if (isMobile) {
-    console.log("Renderizando MobilePage");
     return <MobilePage />;
   }
 
