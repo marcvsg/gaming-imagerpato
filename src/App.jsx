@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import posicoesAcessorios from "./acessorios-posicoes.json";
 import "./App.css";
 import "./styles/style.css";
+import MobilePage from "./MobilePage";
 
 const roupas = [
   "ha-1.png",
@@ -88,9 +89,6 @@ function filtrarPorCategoria(prefixo) {
   return [""].concat(roupas.filter((r) => r.startsWith(prefixo + "-")));
 }
 
-// Remover a constante posicoesAcessoriosMobile e usar o objeto do JSON
-const posicoesAcessoriosMobile = posicoesAcessorios.mobile || {};
-
 export default function App() {
   const [categoria, setCategoria] = useState("ha");
   const [indiceRoupa, setIndiceRoupa] = useState(0);
@@ -144,12 +142,22 @@ export default function App() {
   }, []);
 
   // Estado para detectar se está em mobile
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isMobile, setIsMobile] = useState(true); // Forçar mobile para teste
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // Debug: log para verificar se está detectando mobile
+  console.log("Largura da tela:", window.innerWidth);
+  console.log("É mobile?", isMobile);
+
+  // Se estiver em mobile, mostrar a página mobile
+  if (isMobile) {
+    console.log("Renderizando MobilePage");
+    return <MobilePage />;
+  }
 
   const [drag, setDrag] = useState({ ativo: false, offsetX: 0, offsetY: 0 });
 
@@ -323,11 +331,7 @@ export default function App() {
   const ordemRenderizacao = ["ch", "fa", "ea", "he", "ha", "hr"];
 
   // Dimensões padrão da área do pato
-  const areaPatoDesktop = { width: 200, height: 220 };
-  // Ajuste para manter a proporção no mobile (200/220 = 0.909)
-  const areaPatoMobile = { width: 136, height: 150 };
-  // Detecta se está em mobile
-  const areaPato = isMobile ? areaPatoMobile : areaPatoDesktop;
+  const areaPato = { width: 200, height: 220 };
 
   // Função para salvar imagem do pato
   const salvarImagem = async () => {
@@ -496,10 +500,7 @@ export default function App() {
                         ? 2
                         : 1;
                     // Seleciona as coordenadas corretas
-                    const posicao = isMobile
-                      ? posicoesAcessoriosMobile[roupa] ||
-                        posicoesAcessorios[roupa]
-                      : posicoesAcessorios[roupa];
+                    const posicao = posicoesAcessorios[roupa];
                     return roupa ? (
                       <ImagemColorida
                         key={cat}
