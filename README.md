@@ -1,9 +1,9 @@
 
-Quackrator 🦆
+Quackrator
 
 Um editor de personagens interativo em desenvolvimento com React que permite criar e personalizar avatares com diversos acessórios, roupas e cores.
 
-✨ Funcionalidades
+Funcionalidades
 - Editor de Personagens: Interface intuitiva para criar avatares personalizados
 - Categorias de Acessórios: Chapéus, cabelos, roupas, acessórios de rosto, óculos e acessórios de cabeça
 - Sistema de Cores: Personalização de cores para diferentes tipos de acessórios
@@ -20,7 +20,7 @@ Tecnologias
 - CSS - Estilização personalizada
 - Python - Script para processamento de imagens
 
-🎨 Sistema de Acessórios
+Sistema de Acessórios
 O projeto inclui um sistema completo de categorização em .json
 
 - ha: Chapéus (12 opções)
